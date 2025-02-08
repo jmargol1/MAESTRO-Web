@@ -1,0 +1,8 @@
+openai
+python-dotenv
+PyMuPDF
+Pillow
+tqdm
+langchain-openai
+langchain-community
+faiss-cpu

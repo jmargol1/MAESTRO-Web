@@ -5,7 +5,9 @@
 *   **Image-to-Video:** Transforms existing slide decks (PDF presentations) into narrated video lectures, complete with instructor-style voiceover and synchronized visuals.
 *   **Text-to-Video:** Generates animated educational videos from text-based lesson outlines, utilizing AI agents to create dynamic slides and accompanying narrations.
 
-## Sample video
+## Sample videos
+
+https://github.com/user-attachments/assets/73bbb39e-0f60-47fa-aa14-e267720b5f8d
 
 https://github.com/user-attachments/assets/3ea7d03d-e211-4a1e-979e-90d03145c4fa
 

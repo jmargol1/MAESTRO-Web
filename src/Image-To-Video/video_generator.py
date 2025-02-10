@@ -37,7 +37,8 @@ def generate_slide_script(image_path, slide_number, total_slides, previous_conte
                                    f"1. Content scope: Only explain visible elements\n"
                                    f"2. Position context: {position_instructions[position]}\n"
                                    f"3. Technical accuracy: Maintain precise terminology\n"
-                                   f"4. Flow: Natural transitions between concepts"},
+                                   f"4. Flow: Natural transitions between concepts\n"
+                                   f"5. Avoid repeating 'Building upon'"},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
         ]
     }

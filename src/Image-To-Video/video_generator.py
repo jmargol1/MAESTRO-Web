@@ -2,25 +2,33 @@ import os
 import argparse
 from openai import OpenAI
 import subprocess
+import time
 from utils import *
 
 def generate_slide_script(image_path, slide_number, total_slides, previous_content, api_key):
+    """Generate script for a slide using LLM"""
     client = OpenAI(api_key=api_key)
     base64_image = encode_image(image_path)
     
     system_message = {
         "role": "system",
         "content": """You are an expert computer science lecturer delivering clear, concise explanations.
-    Rules:
-    1. Only explain visible content
-    2. Use natural speech patterns
-    3. No meta-references or slide mentions
-    4. Skip irrelevant metadata
-    5. Maintain logical flow between slides
-    6. Keep explanations focused and precise
-    7. Explain concepts concisely
-    8. Never say "Title:..."
-    """
+Rules:
+1. Only explain visible content
+2. Use natural speech patterns
+3. No meta-references or slide mentions
+4. Skip irrelevant metadata
+5. Maintain logical flow between slides
+6. Keep explanations focused and precise
+7. Explain concepts concisely
+8. Never say "Title:..."
+
+Speaking style:
+- Conversational and engaging
+- Direct and clear
+- Professional but approachable
+- Concise yet thorough
+"""
     }
     
     position = "first" if slide_number == 1 else "last" if slide_number == total_slides else "middle"
@@ -33,13 +41,15 @@ def generate_slide_script(image_path, slide_number, total_slides, previous_conte
     user_message = {
         "role": "user",
         "content": [
-            {"type": "text", "text": f"Generate a teaching script following these parameters:\n"
-                                   f"1. Content scope: Only explain visible elements\n"
-                                   f"2. Position context: {position_instructions[position]}\n"
-                                   f"3. Technical accuracy: Maintain precise terminology\n"
-                                   f"4. Flow: Natural transitions between concepts\n"
-                                   f"5. Avoid repeating 'Building upon'"},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+            {"type": "text", 
+             "text": f"Generate a teaching script following these parameters:\n"
+                    f"1. Content scope: Only explain visible elements\n"
+                    f"2. Position context: {position_instructions[position]}\n"
+                    f"3. Technical accuracy: Maintain precise terminology\n"
+                    f"4. Flow: Natural transitions between concepts\n"
+                    f"5. Avoid repeating 'Building upon'"},
+            {"type": "image_url", 
+             "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
         ]
     }
     
@@ -58,6 +68,7 @@ def generate_slide_script(image_path, slide_number, total_slides, previous_conte
         return "", messages
 
 def generate_audio(script_text, slide_number, output_dir, api_key):
+    """Generate audio from script using OpenAI TTS."""
     client = OpenAI(api_key=api_key)
     response = client.audio.speech.create(
         model="tts-1",
@@ -71,38 +82,39 @@ def generate_audio(script_text, slide_number, output_dir, api_key):
     return audio_path
 
 def create_video_ffmpeg(images_dir, audio_dir, output_path):
-    """Create video from images and audio."""
+    """Create final video with optimized FFmpeg settings."""
     pairs = get_sorted_pairs(images_dir, audio_dir)
     if not pairs:
         raise ValueError("No valid image-audio pairs found")
 
-    video_list = "video_list.txt"
-    audio_concat = "audio_concat.txt"
-    temp_video = "temp_video.mp4"
-    temp_audio = "temp_audio.mp3"
+    filter_complex = []
+    inputs = []
     
-    with open(video_list, "w") as vf, open(audio_concat, "w") as af:
-        for img, aud in pairs:
-            dur = get_audio_duration(aud)
-            vf.write(f"file '{img}'\nduration {dur}\n")
-            af.write(f"file '{aud}'\nduration {dur}\n")
-        vf.write(f"file '{pairs[-1][0]}'\n")
-        af.write(f"file '{pairs[-1][1]}'\n")
-
-    # video and audio
-    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", video_list,
-                   "-vsync", "vfr", "-pix_fmt", "yuv420p", "-c:v", "libx264", temp_video])
-    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", audio_concat,
-                   "-c", "copy", temp_audio])
+    for i, (img, aud) in enumerate(pairs):
+        inputs.extend(['-loop', '1', '-i', img, '-i', aud])
+        filter_complex.append(
+            f'[{2*i}:v][{2*i+1}:a]'
+            f'trim=duration={get_audio_duration(aud)}'
+            f'[v{i}][a{i}]'
+        )
     
-    # merge video and audio
-    subprocess.run(["ffmpeg", "-y", "-i", temp_video, "-i", temp_audio,
-                   "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", output_path])
+    # concatenate all segments
+    filter_complex.append(
+        ';'.join([f'[v{i}][a{i}]' for i in range(len(pairs))]) +
+        f'concat=n={len(pairs)}:v=1:a=1[outv][outa]'
+    )
 
-    # cleanup
-    for f in [video_list, audio_concat, temp_video, temp_audio]:
-        if os.path.exists(f):
-            os.remove(f)
+    # FFmpeg command 
+    subprocess.run([
+        'ffmpeg', '-y',
+        *inputs,
+        '-filter_complex', ''.join(filter_complex),
+        '-map', '[outv]', '-map', '[outa]',
+        '-c:v', 'libx264', '-preset', 'veryfast',
+        '-c:a', 'aac', '-b:a', '192k',
+        '-pix_fmt', 'yuv420p',
+        output_path
+    ])
 
 def main():
     parser = argparse.ArgumentParser(description="Generate video from PDF presentation")
@@ -115,19 +127,20 @@ def main():
     clean_directories()
 
     try:
+        print("Converting PDF to images...")
         images_dir = convert_pdf_to_images(args.pdf_path)
         
-        # script generation
+        print("Generating scripts...")
         scripts_dir = "output/scripts"
         os.makedirs(scripts_dir, exist_ok=True)
+        
         image_files = sorted([os.path.join(images_dir, f) for f in os.listdir(images_dir) 
                             if f.endswith(".png")], key=natural_sort_key)
         
         conversation_history = []
         scripts_list = []
         
-        print("Generating scripts...")
-        for i, image_file in enumerate(image_files, 1):
+        for i, image_file in enumerate(tqdm(image_files, desc="Generating scripts"), 1):
             script_text, updated_history = generate_slide_script(
                 image_file, i, len(image_files), conversation_history, args.api_key
             )
@@ -137,16 +150,15 @@ def main():
             with open(os.path.join(scripts_dir, f"slide_{i}_script.txt"), "w") as f:
                 f.write(script_text)
         
-        # audio generation
         print("Generating audio...")
         audio_dir = "output/audio"
         os.makedirs(audio_dir, exist_ok=True)
-        for i, script_text in enumerate(scripts_list, 1):
+        
+        for i, script_text in enumerate(tqdm(scripts_list, desc="Generating audio"), 1):
             if script_text.strip():
                 generate_audio(script_text, i, audio_dir, args.api_key)
         
-        # video generation
-        print("Creating video...")
+        print("Creating final video...")
         create_video_ffmpeg(images_dir, audio_dir, args.output)
         print(f"Video created successfully: {args.output}")
         

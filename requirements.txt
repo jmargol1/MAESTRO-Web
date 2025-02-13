@@ -6,3 +6,5 @@ tqdm
 langchain-openai
 langchain-community
 faiss-cpu
+requests==2.31.0
+pyht==1.0.0

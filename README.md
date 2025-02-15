@@ -70,10 +70,10 @@ The `media` directory comprises the following subdirectories with the correspond
     This will launch a simple command-line interface for chatting with the content of your generated lecture.
 
 ## MAESTRO App
-![MAESTRO_Interface](https://github.com/user-attachments/assets/290341b7-90ae-47fb-b527-ab4d2605a90a)
 
-![Screen Recording 2025-02-14 at 7 57 15 PM](https://github.com/user-attachments/assets/5e3be40c-4218-41b0-8247-db6d5a964da0)
+![MAESTRO_Interface](https://github.com/user-attachments/assets/00dd2fc0-39c1-4e77-bb6e-d16a520efb96)
 
+![toGIF-2](https://github.com/user-attachments/assets/1926ae87-788c-43ca-991c-262b62a429c8)
 
 ### Prerequisites
 - Python 3.x

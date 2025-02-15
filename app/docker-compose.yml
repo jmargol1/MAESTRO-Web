@@ -31,8 +31,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-    # volumes:
-    #   - ./static:/app/static
     networks:
       - app-network
     depends_on:

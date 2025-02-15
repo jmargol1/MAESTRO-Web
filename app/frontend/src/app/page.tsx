@@ -503,14 +503,14 @@ export default function Home() {
                     </button>
                   </div>
                   
-                  {/* Chat Messages - Updated with light theme */}
+                  {/* Chat Messages */}
                   {answer && (
                     <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 mb-4">
                       <p className="text-gray-700 dark:text-gray-300">{answer}</p>
                     </div>
                   )}
                   
-                  {/* Question Input - Updated with light theme */}
+                  {/* Question Input*/}
                   <form onSubmit={handleAskQuestion} className="space-y-4">
                     <div className="flex gap-2">
                       <input
@@ -540,7 +540,7 @@ export default function Home() {
                     </div>
                   </form>
                   
-                  {/* Error Display - Updated with light theme */}
+                  {/* Error Display with light theme */}
                   {error && (
                     <div className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/50 text-red-600 dark:text-red-500 px-4 py-2 rounded-lg">
                       {error}
@@ -577,7 +577,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Add the settings panel */}
+      {/* settings panel */}
       {showSettings && <SettingsPanel />}
     </main>
   );

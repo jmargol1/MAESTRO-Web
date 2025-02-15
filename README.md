@@ -68,3 +68,20 @@ The `media` directory comprises the following subdirectories with the correspond
     *   Replace `your-openai-api-key` with your OpenAI API key.
 
     This will launch a simple command-line interface for chatting with the content of your generated lecture.
+
+## MAESTRO App
+![MAESTRO_Interface](https://github.com/user-attachments/assets/6aa6753f-6533-4946-9a70-0ac4590910d3)
+
+
+
+**Prerequisites:**
+### Prerequisites
+- Python 3.x
+- Docker
+- Node.js (for frontend)
+
+### Installation
+1. Clone repository
+2. `cd app`
+3. `docker-compose up --build`
+4. Access at `http://localhost`

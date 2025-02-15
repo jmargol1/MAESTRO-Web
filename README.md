@@ -83,5 +83,5 @@ The `media` directory comprises the following subdirectories with the correspond
 ### Installation and how to run the app
 1. Clone repository
 2. `cd app`
-3. `docker-compose up --build`
+3. `docker-compose up --build` or use `./start.sh`
 4. Access at `http://localhost`

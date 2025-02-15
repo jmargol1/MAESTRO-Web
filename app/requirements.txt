@@ -1,0 +1,15 @@
+PyMuPDF
+openai
+python-dotenv
+flask
+flask-cors
+Pillow
+python-pptx
+moviepy
+scikit-learn
+faiss-cpu
+langchain
+langchain-openai
+langchain-community
+tqdm 
+ffmpeg-python

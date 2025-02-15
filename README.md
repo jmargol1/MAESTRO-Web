@@ -72,9 +72,9 @@ The `media` directory comprises the following subdirectories with the correspond
 ## MAESTRO App
 ![MAESTRO_Interface](https://github.com/user-attachments/assets/6aa6753f-6533-4946-9a70-0ac4590910d3)
 
+![Screen Recording 2025-02-14 at 7 57 15 PM](https://github.com/user-attachments/assets/5e3be40c-4218-41b0-8247-db6d5a964da0)
 
 
-**Prerequisites:**
 ### Prerequisites
 - Python 3.x
 - Docker

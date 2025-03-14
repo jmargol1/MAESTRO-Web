@@ -1,0 +1,8 @@
+1
+00:00:00,000 --> 00:00:05,000
+Today, we'll explore Nearest Neighbor Classifiers. This topic is a fundamental approach in machine learning for classifying data points based on their proximity to other data points.
+
+2
+00:00:05,000 --> 00:00:10,000
+Let's delve into Nearest-Neighbor Classifiers, starting with the basics of how they operate and the terminology involved. We'll then address the challenges in measuring similarity via distance. Next, the expressiveness of the nearest-neighbor approach will be explored, followed by practical implementation using Python. Finally, we'll examine the characteristics, pros, and cons of this classification method.
+

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your PDF</h1>
+        
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+            <!-- PDF Upload -->
+            <label for="pdf">Select PDF File:</label>
+            <input type="file" id="pdf" name="pdf" accept=".pdf" required>
+            
+            <!-- Voice Type Selection -->
+            <label for="voice_type">Select Voice Type:</label>
+            <select id="voice_type" name="voice_type" required>
+                <option value="default">Default Voice</option>
+                <option value="custom">Custom Voice</option>
+            </select>
+            
+            <!-- Custom Voice Options -->
+            <div id="custom-voice-section" style="display: none;">
+                <label>Custom Voice Source:</label>
+                <div>
+                    <input type="radio" id="upload" name="voice_source" value="upload" checked>
+                    <label for="upload">Upload MP3</label>
+                    <input type="radio" id="record" name="voice_source" value="record">
+                    <label for="record">Record Voice</label>
+                </div>
+                
+                <!-- Upload MP3 -->
+                <div id="upload-options">
+                    <label for="custom_voice">Upload Custom Voice File:</label>
+                    <input type="file" id="custom_voice" name="custom_voice" accept=".mp3">
+                </div>
+                
+                <!-- Record Voice -->
+                <div id="record-options" style="display: none;">
+                    <button type="button" id="start-record" class="btn">Start Recording</button>
+                    <button type="button" id="stop-record" class="btn" disabled>Stop Recording</button>
+                    <audio id="recorded-audio" controls style="margin-top: 10px;"></audio>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn">Convert to Video</button>
+        </form>
+    </div>
+
+    <script>
+        const voiceType = document.getElementById('voice_type');
+        const customVoiceSection = document.getElementById('custom-voice-section');
+        const uploadOptions = document.getElementById('upload-options');
+        const recordOptions = document.getElementById('record-options');
+        const voiceSource = document.querySelectorAll('input[name="voice_source"]');
+        const startRecordButton = document.getElementById('start-record');
+        const stopRecordButton = document.getElementById('stop-record');
+        const recordedAudio = document.getElementById('recorded-audio');
+
+        let recorder;
+        let audioBlob;
+
+        // Show/hide custom voice options
+        voiceType.addEventListener('change', () => {
+            if (voiceType.value === 'custom') {
+                customVoiceSection.style.display = 'block';
+            } else {
+                customVoiceSection.style.display = 'none';
+            }
+        });
+
+        // Show/hide upload or record options
+        voiceSource.forEach((input) => {
+            input.addEventListener('change', () => {
+                if (input.value === 'upload') {
+                    uploadOptions.style.display = 'block';
+                    recordOptions.style.display = 'none';
+                } else if (input.value === 'record') {
+                    uploadOptions.style.display = 'none';
+                    recordOptions.style.display = 'block';
+                }
+            });
+        });
+
+        // Start recording
+        startRecordButton.addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new RecordRTC(stream, {
+                type: 'audio',
+                mimeType: 'audio/webm',
+            });
+            recorder.startRecording();
+            startRecordButton.disabled = true;
+            stopRecordButton.disabled = false;
+        });
+
+        // Stop recording
+        stopRecordButton.addEventListener('click', () => {
+            recorder.stopRecording(() => {
+                audioBlob = recorder.getBlob();
+                recordedAudio.src = URL.createObjectURL(audioBlob);
+                startRecordButton.disabled = false;
+                stopRecordButton.disabled = true;
+            });
+        });
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', (e) => {
+            if (voiceType.value === 'custom' && document.querySelector('input[name="voice_source"]:checked').value === 'record') {
+                if (!audioBlob) {
+                    e.preventDefault();
+                    alert('Please record your voice before submitting.');
+                } else {
+                    // Convert the recorded audio to a file and append it to the form
+                    const file = new File([audioBlob], 'recorded_voice.mp3', { type: 'audio/mp3' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('custom_voice').files = dataTransfer.files;
+                }
+            }
+        });
+    </script>
+
+    <script>
+        const socket = io();
+
+        // Show progress bar when form is submitted
+        document.getElementById('upload-form').addEventListener('submit', () => {
+            document.getElementById('progress-container').style.display = 'block';
+        });
+
+        // Listen for progress updates
+        socket.on('progress_update', (data) => {
+            document.getElementById('progress-bar').style.width = `${data.progress}%`;
+            document.getElementById('progress-message').innerText = data.message;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Video Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to PDF to Video Converter</h1>
+        <p>Upload your PDF and convert it into a video with audio narration.</p>
+        
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('home') }}" method="POST">
+            <label for="openai_key">OpenAI API Key:</label>
+            <input type="text" id="openai_key" name="openai_key" required>
+            
+            <label for="playht_user_id">Play.ht User ID:</label>
+            <input type="text" id="playht_user_id" name="playht_user_id">
+            
+            <label for="playht_api_key">Play.ht API Key:</label>
+            <input type="text" id="playht_api_key" name="playht_api_key">
+            
+            <button type="submit">Get Started</button>
+        </form>
+    </div>
+</body>
+</html>

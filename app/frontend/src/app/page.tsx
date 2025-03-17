@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowUpTrayIcon, ChatBubbleLeftIcon, VideoCameraIcon, KeyIcon, SunIcon, MoonIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { ArrowUpTrayIcon, ChatBubbleLeftIcon, VideoCameraIcon, KeyIcon, SunIcon, MoonIcon, Cog6ToothIcon, ArrowUpIcon  } from '@heroicons/react/24/outline';
 
 // API configuration
 const API_CONFIG = {
@@ -500,28 +500,25 @@ export default function Home() {
                   
                   {/* Question Input*/}
                   <form onSubmit={handleAskQuestion} className="space-y-4">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
+                    <div className="relative flex gap-2">
+                      <textarea
                         value={question}
                         onChange={(e) => setQuestion(e.target.value)}
                         placeholder="Ask a question about the content..."
-                        className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 pl-4 pr-9 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px] max-h-[200px] resize-y overflow-auto scrollbar-custom"
                       />
                       <button
                         type="submit"
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        className="absolute right-3 bottom-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-2 py-2 rounded-lg transition-colors flex items-center gap-2"
                         disabled={loading}
                       >
                         {loading ? (
                           <>
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            <span>Thinking...</span>
                           </>
                         ) : (
                           <>
-                            <ChatBubbleLeftIcon className="h-5 w-5" />
-                            <span>Ask</span>
+                            <ArrowUpIcon strokeWidth={2} className="h-5 w-5" />
                           </>
                         )}
                       </button>

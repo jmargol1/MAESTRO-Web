@@ -22,7 +22,6 @@ export async function POST(request: Request) {
     const data = await response.json();
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error('File Upload Error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

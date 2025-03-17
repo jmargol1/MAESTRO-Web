@@ -433,7 +433,9 @@ def upload_file():
     try:
         # unique ID for this upload
         unique_id = str(uuid.uuid4())
-        video_filename = f"{unique_id}_slideshow.mp4"
+        # video_filename = f"{unique_id}_slideshow.mp4"
+        filename = file.filename.split('.')[0]
+        video_filename = f"{filename}.mp4"
         output_path = os.path.join(os.path.abspath("static"), video_filename)
         
         clean_directories(keep_video=output_path)

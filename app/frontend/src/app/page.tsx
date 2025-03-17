@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowUpTrayIcon, ChatBubbleLeftIcon, VideoCameraIcon, KeyIcon, SunIcon, MoonIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { ArrowUpTrayIcon, ChatBubbleLeftIcon, VideoCameraIcon, KeyIcon, SunIcon, MoonIcon, Cog6ToothIcon, ArrowUpIcon  } from '@heroicons/react/24/outline';
 
 // API configuration
 const API_CONFIG = {
@@ -58,7 +58,6 @@ export default function Home() {
         const data = await response.json();
         setApiKeySet(data.api_key_set);
       } catch (error) {
-        console.error('Session check error:', error);
         setError('Failed to connect to server. Make sure backend is running on port 8080');
       }
     };
@@ -80,14 +79,11 @@ export default function Home() {
     setError('');
     
     try {
-      console.log('Setting API key...');
       const response = await fetch(`${API_CONFIG.baseURL}/setup_api`, 
         getFetchOptions('POST', { api_key: apiKey })
       );
       
-      console.log('API key response status:', response.status);
       const data = await response.json();
-      console.log('API key response:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to set API key');
@@ -100,7 +96,6 @@ export default function Home() {
         throw new Error(data.error || 'Failed to set API key');
       }
     } catch (error) {
-      console.error('API Setup Error:', error);
       setError(error instanceof Error ? error.message : 'Failed to connect to server');
       setApiKeySet(false);
     } finally {
@@ -119,7 +114,6 @@ export default function Home() {
       setError('');
       
       try {
-        console.log('Uploading file...');
         const response = await fetch(`${API_CONFIG.baseURL}/upload_file`, {
           method: 'POST',
           body: formData,
@@ -127,9 +121,7 @@ export default function Home() {
           mode: API_CONFIG.mode,
         });
         
-        console.log('Upload response status:', response.status);
         const data = await response.json();
-        console.log('Upload response:', data);
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -147,7 +139,6 @@ export default function Home() {
           throw new Error('Invalid response from server');
         }
       } catch (error) {
-        console.error('Upload Error:', error);
         setError(error instanceof Error ? error.message : 'Error uploading file');
       } finally {
         setLoading(false);
@@ -175,7 +166,6 @@ export default function Home() {
       const data = await response.json();
       setAnswer(data.answer);
     } catch (error) {
-      console.error('Chat Error:', error);
       setError(error instanceof Error ? error.message : 'Error getting answer');
     } finally {
       setLoading(false);
@@ -190,7 +180,6 @@ export default function Home() {
       const cleanPath = videoUrl.replace('/api/static/', '').replace('static/', '');
       window.location.href = `${API_CONFIG.baseURL}/download_video?video_path=${encodeURIComponent(cleanPath)}`;
     } catch (error) {
-      console.error('Download Error:', error);
       setError('Error downloading video');
     }
   };
@@ -211,7 +200,6 @@ export default function Home() {
       
       setShowSettings(false);
     } catch (error) {
-      console.error('Settings Update Error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update settings');
     }
   };
@@ -240,14 +228,13 @@ export default function Home() {
         setSafetyInstructions(localInstructions);
         setShowSettings(false);
       } catch (error) {
-        console.error('Settings Update Error:', error);
         setError(error instanceof Error ? error.message : 'Failed to update settings');
       }
     };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 h-[calc(100vh-20px)] overflow-y-scroll scrollbar-custom">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Chat Settings</h3>
             <button
@@ -411,11 +398,12 @@ export default function Home() {
                     id="file-upload"
                   />
                   <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center"
+                    htmlFor={loading ? "" : "file-upload"}
+                    className={`flex flex-col items-center ${loading ? "cursor-default" : "cursor-pointer"}`}
+
                   >
                     <ArrowUpTrayIcon className="h-12 w-12 text-gray-400 mb-4" />
-                    <span className="text-lg font-medium text-gray-300">
+                    <span className={`text-lg font-medium ${loading ? "text-gray-500" : " text-gray-300"}`}>
                       Drop your PDF here or click to upload
                     </span>
                     <span className="text-sm text-gray-500 mt-2">
@@ -512,28 +500,25 @@ export default function Home() {
                   
                   {/* Question Input*/}
                   <form onSubmit={handleAskQuestion} className="space-y-4">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
+                    <div className="relative flex gap-2">
+                      <textarea
                         value={question}
                         onChange={(e) => setQuestion(e.target.value)}
                         placeholder="Ask a question about the content..."
-                        className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 pl-4 pr-9 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px] max-h-[200px] resize-y overflow-auto scrollbar-custom"
                       />
                       <button
                         type="submit"
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        className="absolute right-3 bottom-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-2 py-2 rounded-lg transition-colors flex items-center gap-2"
                         disabled={loading}
                       >
                         {loading ? (
                           <>
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            <span>Thinking...</span>
                           </>
                         ) : (
                           <>
-                            <ChatBubbleLeftIcon className="h-5 w-5" />
-                            <span>Ask</span>
+                            <ArrowUpIcon strokeWidth={2} className="h-5 w-5" />
                           </>
                         )}
                       </button>

@@ -411,11 +411,12 @@ export default function Home() {
                     id="file-upload"
                   />
                   <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center"
+                    htmlFor={loading ? "" : "file-upload"}
+                    className={`flex flex-col items-center ${loading ? "cursor-default" : "cursor-pointer"}`}
+
                   >
                     <ArrowUpTrayIcon className="h-12 w-12 text-gray-400 mb-4" />
-                    <span className="text-lg font-medium text-gray-300">
+                    <span className={`text-lg font-medium ${loading ? "text-gray-500" : " text-gray-300"}`}>
                       Drop your PDF here or click to upload
                     </span>
                     <span className="text-sm text-gray-500 mt-2">

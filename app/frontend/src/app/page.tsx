@@ -58,7 +58,6 @@ export default function Home() {
         const data = await response.json();
         setApiKeySet(data.api_key_set);
       } catch (error) {
-        console.error('Session check error:', error);
         setError('Failed to connect to server. Make sure backend is running on port 8080');
       }
     };
@@ -80,14 +79,11 @@ export default function Home() {
     setError('');
     
     try {
-      console.log('Setting API key...');
       const response = await fetch(`${API_CONFIG.baseURL}/setup_api`, 
         getFetchOptions('POST', { api_key: apiKey })
       );
       
-      console.log('API key response status:', response.status);
       const data = await response.json();
-      console.log('API key response:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to set API key');
@@ -100,7 +96,6 @@ export default function Home() {
         throw new Error(data.error || 'Failed to set API key');
       }
     } catch (error) {
-      console.error('API Setup Error:', error);
       setError(error instanceof Error ? error.message : 'Failed to connect to server');
       setApiKeySet(false);
     } finally {
@@ -119,7 +114,6 @@ export default function Home() {
       setError('');
       
       try {
-        console.log('Uploading file...');
         const response = await fetch(`${API_CONFIG.baseURL}/upload_file`, {
           method: 'POST',
           body: formData,
@@ -127,9 +121,7 @@ export default function Home() {
           mode: API_CONFIG.mode,
         });
         
-        console.log('Upload response status:', response.status);
         const data = await response.json();
-        console.log('Upload response:', data);
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -147,7 +139,6 @@ export default function Home() {
           throw new Error('Invalid response from server');
         }
       } catch (error) {
-        console.error('Upload Error:', error);
         setError(error instanceof Error ? error.message : 'Error uploading file');
       } finally {
         setLoading(false);
@@ -175,7 +166,6 @@ export default function Home() {
       const data = await response.json();
       setAnswer(data.answer);
     } catch (error) {
-      console.error('Chat Error:', error);
       setError(error instanceof Error ? error.message : 'Error getting answer');
     } finally {
       setLoading(false);
@@ -190,7 +180,6 @@ export default function Home() {
       const cleanPath = videoUrl.replace('/api/static/', '').replace('static/', '');
       window.location.href = `${API_CONFIG.baseURL}/download_video?video_path=${encodeURIComponent(cleanPath)}`;
     } catch (error) {
-      console.error('Download Error:', error);
       setError('Error downloading video');
     }
   };
@@ -211,7 +200,6 @@ export default function Home() {
       
       setShowSettings(false);
     } catch (error) {
-      console.error('Settings Update Error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update settings');
     }
   };
@@ -240,7 +228,6 @@ export default function Home() {
         setSafetyInstructions(localInstructions);
         setShowSettings(false);
       } catch (error) {
-        console.error('Settings Update Error:', error);
         setError(error instanceof Error ? error.message : 'Failed to update settings');
       }
     };

@@ -19,9 +19,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({ api_key }),
     });
 
-    console.log('Response status:', response.status);
     const responseText = await response.text();
-    console.log('Response text:', responseText);
 
     if (!response.ok) {
       return NextResponse.json({ success: false, error: responseText || 'Server error' }, { status: response.status });
@@ -31,7 +29,6 @@ export async function POST(request: Request) {
     try {
       data = JSON.parse(responseText);
     } catch (e) {
-      console.error('Failed to parse JSON response:', e);
       data = { message: responseText };
     }
     
@@ -42,7 +39,6 @@ export async function POST(request: Request) {
     
     return nextResponse;
   } catch (error) {
-    console.error('API Setup Error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

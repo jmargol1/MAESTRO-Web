@@ -1,17 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
+    const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://backend:8080/:path*',
+        destination: `${backendUrl}/:path*`,
       },
       {
         source: '/static/:path*',
-        destination: 'http://backend:8080/static/:path*',
+        destination: `${backendUrl}/static/:path*`,
       }
     ];
   }
 };
-
 module.exports = nextConfig;

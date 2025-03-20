@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
@@ -9,11 +10,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'File is required' }, { status: 400 });
     }
     
-    // Use the backend URL instead of calling itself
+    // Get API key from cookies if possible
+    const cookieStore = cookies();
+    const apiKeyCookie = cookieStore.get('api_key');
+    
     const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
+    
+    // Create a new FormData to include everything
+    const newFormData = new FormData();
+    newFormData.append('pdf_file', file);
+    
+    // Include API key if available from cookies
+    if (apiKeyCookie && apiKeyCookie.value) {
+      newFormData.append('api_key', apiKeyCookie.value);
+    }
+    
     const response = await fetch(`${backendUrl}/upload_file`, {
       method: 'POST',
-      body: formData,
+      body: newFormData,
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -31,20 +46,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-// Add CORS support for preflight requests
-export async function OPTIONS(request: Request) {
-  const nextResponse = NextResponse.json({}, { status: 200 });
-  
-  // Set CORS headers
-  nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  nextResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Accept');
-  nextResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-  
-  // Use dynamic origin
-  const origin = request.headers.get('origin') || '*';
-  nextResponse.headers.set('Access-Control-Allow-Origin', origin);
-  
-  return nextResponse;
 }

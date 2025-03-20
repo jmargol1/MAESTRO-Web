@@ -420,7 +420,18 @@ def check_session():
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
     """Handle PDF upload and video generation."""
-    if not session.get('api_key'):
+    # Get API key from multiple possible sources
+    api_key = session.get('api_key')
+    
+    # Also check form data
+    if not api_key and 'api_key' in request.form:
+        api_key = request.form['api_key']
+        
+    # Check headers too
+    if not api_key and 'X-API-Key' in request.headers:
+        api_key = request.headers['X-API-Key']
+        
+    if not api_key:
         return jsonify({"error": "API key not set"}), 401
 
     if 'pdf_file' not in request.files:

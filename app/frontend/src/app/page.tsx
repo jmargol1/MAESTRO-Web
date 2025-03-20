@@ -90,6 +90,8 @@ export default function Home() {
       }
       
       if (data.success) {
+        // Store API key in localStorage
+        localStorage.setItem('maestro_api_key', apiKey);
         setApiKeySet(true);
         setError('');
       } else {
@@ -109,7 +111,13 @@ export default function Home() {
       setFile(file);
       const formData = new FormData();
       formData.append('pdf_file', file);
-      
+
+      // Add API key to the form data
+      const storedApiKey = localStorage.getItem('maestro_api_key');
+      if (storedApiKey) {
+        formData.append('api_key', storedApiKey);
+      }
+        
       setLoading(true);
       setError('');
       

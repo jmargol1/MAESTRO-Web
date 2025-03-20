@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
@@ -11,16 +12,37 @@ export async function POST(request: Request) {
     
     const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
     
-    // Forward the request directly without trying to iterate headers
+    // Create a new FormData object to add the API key explicitly
+    const newFormData = new FormData();
+    newFormData.append('pdf_file', file);
+    
+    // Try to get API key from cookies
+    const cookieStore = cookies();
+    const apiKeyCookie = cookieStore.get('api_key');
+    
+    // If we have an API key from cookies, add it to the form data
+    if (apiKeyCookie && apiKeyCookie.value) {
+      newFormData.append('api_key', apiKeyCookie.value);
+    }
+    
+    // Alternatively, try to extract it from request cookies header
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader && !apiKeyCookie) {
+      const match = cookieHeader.match(/api_key=([^;]+)/);
+      if (match && match[1]) {
+        newFormData.append('api_key', match[1]);
+      }
+    }
+    
+    // You might need to check your backend code to see exactly how it expects to receive authentication
+    
     const response = await fetch(`${backendUrl}/upload_file`, {
       method: 'POST',
-      // Add authorization header if your backend expects it
       headers: {
-        // You can add specific headers here if needed
-        'Authorization': request.headers.get('authorization') || '',
+        // Forward authentication cookies
         'Cookie': request.headers.get('cookie') || '',
       },
-      body: formData,
+      body: newFormData,
       credentials: 'include',
     });
     

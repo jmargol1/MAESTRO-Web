@@ -1,15 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
     return [
       {
+        source: '/api/check_session',
+        destination: 'https://maestro-web-backend-68382569913.us-east4.run.app/check_session',
+      },
+      {
         source: '/api/:path*',
-        destination: `${backendUrl}/:path*`,
+        destination: 'https://maestro-web-backend-68382569913.us-east4.run.app/:path*',
       },
       {
         source: '/static/:path*',
-        destination: `${backendUrl}/static/:path*`,
+        destination: 'https://maestro-web-backend-68382569913.us-east4.run.app/static/:path*',
       }
     ];
   }

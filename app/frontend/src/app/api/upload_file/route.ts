@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
@@ -10,30 +9,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'File is required' }, { status: 400 });
     }
     
-    // Get API key from cookies if possible
-    const cookieStore = cookies();
-    const apiKeyCookie = cookieStore.get('api_key');
-    
     const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
     
-    // Create a new FormData to include everything
-    const newFormData = new FormData();
-    newFormData.append('pdf_file', file);
-    
-    // Include API key if available from cookies
-    if (apiKeyCookie && apiKeyCookie.value) {
-      newFormData.append('api_key', apiKeyCookie.value);
+    // Forward all headers from the original request, which should include any cookies
+    const headers = new Headers();
+    for (const [key, value] of request.headers.entries()) {
+      headers.set(key, value);
     }
+    
+    // Include Content-Type for the FormData
+    headers.delete('content-type'); // Remove existing Content-Type to let fetch set it correctly for FormData
     
     const response = await fetch(`${backendUrl}/upload_file`, {
       method: 'POST',
-      body: newFormData,
+      headers,
+      body: formData, // Use the original formData
       credentials: 'include',
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Backend upload error:', errorText);
+      console.error('Backend upload error:', errorText, response.status);
       return NextResponse.json({ success: false, error: errorText }, { status: response.status });
     }
     
@@ -46,4 +42,18 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+// Keep the OPTIONS handler from before
+export async function OPTIONS(request: Request) {
+  const nextResponse = NextResponse.json({}, { status: 200 });
+  
+  nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  nextResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  nextResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+  
+  const origin = request.headers.get('origin') || '*';
+  nextResponse.headers.set('Access-Control-Allow-Origin', origin);
+  
+  return nextResponse;
 }

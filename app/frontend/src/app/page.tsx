@@ -114,16 +114,30 @@ export default function Home() {
 
       // Add API key to the form data
       const storedApiKey = localStorage.getItem('maestro_api_key');
+      console.log('API key found in localStorage:', !!storedApiKey);
+      
       if (storedApiKey) {
         formData.append('api_key', storedApiKey);
+
+        // Try several variations of the key name
+        formData.append('apiKey', storedApiKey);
+        formData.append('openai_api_key', storedApiKey);
       }
-        
+
+      // Custom headers for the fetch request
+      const customHeaders: Record<string, string> = {
+        // Include as authorization header too
+        'Authorization': `Bearer ${storedApiKey || ''}`,
+        'X-API-Key': storedApiKey || ''
+      };
+      
       setLoading(true);
       setError('');
       
       try {
         const response = await fetch(`${API_CONFIG.baseURL}/upload_file`, {
           method: 'POST',
+          headers: customHeaders,
           body: formData,
           credentials: API_CONFIG.credentials,
           mode: API_CONFIG.mode,

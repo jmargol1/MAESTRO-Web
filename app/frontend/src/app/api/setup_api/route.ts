@@ -9,7 +9,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'API key is required' }, { status: 400 });
     }
 
-    const response = await fetch('http://backend:8080/setup_api', { // Updated URL
+    // Use the environment variable for the backend URL instead of hardcoded value
+    const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
+    
+    const response = await fetch(`${backendUrl}/setup_api`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -20,11 +23,10 @@ export async function POST(request: Request) {
     });
 
     const responseText = await response.text();
-
     if (!response.ok) {
       return NextResponse.json({ success: false, error: responseText || 'Server error' }, { status: response.status });
     }
-
+    
     let data;
     try {
       data = JSON.parse(responseText);
@@ -35,10 +37,14 @@ export async function POST(request: Request) {
     // Set the response with proper CORS headers
     const nextResponse = NextResponse.json({ success: true, data });
     nextResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-    nextResponse.headers.set('Access-Control-Allow-Origin', 'http://localhost:3002');
+    
+    // Use dynamic origin instead of hardcoded localhost
+    const origin = request.headers.get('origin') || '*';
+    nextResponse.headers.set('Access-Control-Allow-Origin', origin);
     
     return nextResponse;
   } catch (error) {
+    console.error('Error setting up API:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -54,7 +60,10 @@ export async function OPTIONS(request: Request) {
   nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   nextResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Accept');
   nextResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-  nextResponse.headers.set('Access-Control-Allow-Origin', 'http://localhost:3002');
+  
+  // Use dynamic origin instead of hardcoded localhost
+  const origin = request.headers.get('origin') || '*';
+  nextResponse.headers.set('Access-Control-Allow-Origin', origin);
   
   return nextResponse;
 }

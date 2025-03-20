@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    // Get the file from formData
     const formData = await request.formData();
     const file = formData.get('pdf_file');
     
@@ -12,44 +11,43 @@ export async function POST(request: Request) {
     
     const backendUrl = process.env.NEXT_API_REWRITES_BACKEND_URL || 'http://backend:8080';
     
-    // Make a preliminary request to fetch the API key status
-    const checkResponse = await fetch(`${backendUrl}/check_session`, {
-      method: 'GET',
-      headers: {
-        'Cookie': request.headers.get('cookie') || '',
-      },
-      credentials: 'include',
-    });
+    // Extract cookies from the original request
+    const cookieHeader = request.headers.get('cookie') || '';
     
-    const checkData = await checkResponse.json();
-    console.log('API key status check:', checkData);
+    // Create a completely new FormData with all the original data
+    const newFormData = new FormData();
+    newFormData.append('pdf_file', file);
     
-    // If API key is not set, return error immediately
-    if (!checkData.api_key_set) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'API key not set. Please set your API key first.' 
-      }, { status: 401 });
-    }
-    
-    // Forward the upload with cookies
+    // Forward the request with cookies for session-based auth
     const response = await fetch(`${backendUrl}/upload_file`, {
       method: 'POST',
       headers: {
-        'Cookie': request.headers.get('cookie') || '',
+        'Cookie': cookieHeader,
       },
-      body: formData,
+      body: newFormData,
       credentials: 'include',
     });
     
     if (!response.ok) {
-      let errorText = await response.text();
-      console.error('Backend upload error:', errorText, response.status);
+      let errorText;
+      try {
+        errorText = await response.text();
+      } catch (e) {
+        errorText = `Error status: ${response.status}`;
+      }
+      console.error('Backend upload error:', errorText);
       return NextResponse.json({ success: false, error: errorText }, { status: response.status });
     }
     
-    const data = await response.json();
-    return NextResponse.json({ success: true, data });
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      const text = await response.text();
+      data = { text };
+    }
+    
+    return NextResponse.json({ success: true, ...data });
   } catch (error) {
     console.error('File upload error:', error);
     return NextResponse.json(
@@ -57,4 +55,14 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function OPTIONS(request: Request) {
+  const nextResponse = NextResponse.json({}, { status: 200 });
+  nextResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  nextResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Cookie');
+  nextResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+  const origin = request.headers.get('origin') || '*';
+  nextResponse.headers.set('Access-Control-Allow-Origin', origin);
+  return nextResponse;
 }

@@ -79,9 +79,16 @@ export default function Home() {
     setError('');
     
     try {
-      const response = await fetch(`${API_CONFIG.baseURL}/setup_api`, 
-        getFetchOptions('POST', { api_key: apiKey })
-      );
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+      
+      const response = await fetch(`${API_CONFIG.baseURL}/setup_api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ api_key: apiKey }),
+        credentials: 'include', // Important for session cookies
+      });
       
       const data = await response.json();
       
@@ -90,8 +97,6 @@ export default function Home() {
       }
       
       if (data.success) {
-        // Store API key in localStorage
-        localStorage.setItem('maestro_api_key', apiKey);
         setApiKeySet(true);
         setError('');
       } else {
@@ -103,7 +108,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -111,36 +116,17 @@ export default function Home() {
       setFile(file);
       const formData = new FormData();
       formData.append('pdf_file', file);
-
-      // Add API key to the form data
-      const storedApiKey = localStorage.getItem('maestro_api_key');
-      console.log('API key found in localStorage:', !!storedApiKey);
-      
-      if (storedApiKey) {
-        formData.append('api_key', storedApiKey);
-
-        // Try several variations of the key name
-        formData.append('apiKey', storedApiKey);
-        formData.append('openai_api_key', storedApiKey);
-      }
-
-      // Custom headers for the fetch request
-      const customHeaders: Record<string, string> = {
-        // Include as authorization header too
-        'Authorization': `Bearer ${storedApiKey || ''}`,
-        'X-API-Key': storedApiKey || ''
-      };
       
       setLoading(true);
       setError('');
       
       try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+        
         const response = await fetch(`${API_CONFIG.baseURL}/upload_file`, {
           method: 'POST',
-          headers: customHeaders,
           body: formData,
-          credentials: API_CONFIG.credentials,
-          mode: API_CONFIG.mode,
+          credentials: 'include'
         });
         
         const data = await response.json();
@@ -154,7 +140,8 @@ export default function Home() {
         }
         
         if (data.success && data.video_path) {
-          setVideoUrl(data.video_path);
+          const videoUrl = data.video_path.replace('/api', backendUrl);
+          setVideoUrl(videoUrl);
           setShowChat(true);
           setError('');
         } else {
